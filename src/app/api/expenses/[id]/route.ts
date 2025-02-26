@@ -1,17 +1,23 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import DB from '@/lib/db';
 import { isValid, parseISO } from 'date-fns';
 
-interface RouteParams {
-    params: {
-        id: string;
-    };
-}
 
-export async function GET(request: Request, context: RouteParams) {
+// 定义可更新的支出字段类型
+type ExpenseUpdate = {
+    amount?: number;
+    category_id?: number;
+    date?: string;
+    note?: string;
+};
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
-        const params = await context.params;
-        const expenseId = parseInt(params.id);
+        const { id } = await params;
+        const expenseId = parseInt(id);
         if (isNaN(expenseId)) {
             return NextResponse.json(
                 { error: '无效的ID' },
@@ -37,10 +43,13 @@ export async function GET(request: Request, context: RouteParams) {
     }
 }
 
-export async function PUT(request: Request, context: RouteParams) {
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
-        const params = await context.params;
-        const expenseId = parseInt(params.id);
+        const { id } = await params;
+        const expenseId = parseInt(id);
         if (isNaN(expenseId)) {
             return NextResponse.json(
                 { error: '无效的ID' },
@@ -59,7 +68,7 @@ export async function PUT(request: Request, context: RouteParams) {
             );
         }
 
-        const updates: Record<string, any> = {};
+        const updates: ExpenseUpdate = {};
 
         // 验证金额
         if (amount !== undefined) {
@@ -120,10 +129,13 @@ export async function PUT(request: Request, context: RouteParams) {
     }
 }
 
-export async function DELETE(request: Request, context: RouteParams) {
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
-        const params = await context.params;
-        const expenseId = parseInt(params.id);
+        const { id } = await params;
+        const expenseId = parseInt(id);
         if (isNaN(expenseId)) {
             return NextResponse.json(
                 { error: '无效的ID' },

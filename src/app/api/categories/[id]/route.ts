@@ -1,23 +1,21 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import DB from '@/lib/db';
 
-interface RouteParams {
-    params: {
-        id: string;
-    };
-}
-
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
-        const id = parseInt(params.id);
-        if (isNaN(id)) {
+        const { id } = await params;
+        const categoryId = parseInt(id);
+        if (isNaN(categoryId)) {
             return NextResponse.json(
                 { error: '无效的ID' },
                 { status: 400 }
             );
         }
 
-        const category = DB.getCategoryById(id);
+        const category = DB.getCategoryById(categoryId);
         if (!category) {
             return NextResponse.json(
                 { error: '分类不存在' },
@@ -35,10 +33,14 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 }
 
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
-        const id = parseInt(params.id);
-        if (isNaN(id)) {
+        const { id } = await params;
+        const categoryId = parseInt(id);
+        if (isNaN(categoryId)) {
             return NextResponse.json(
                 { error: '无效的ID' },
                 { status: 400 }
@@ -54,8 +56,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
                 { status: 400 }
             );
         }
-
-        const success = DB.updateCategory(id, {
+        const success = DB.updateCategory(categoryId, {
             ...(name && { name }),
             ...(icon && { icon }),
             ...(color && { color })
@@ -68,7 +69,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
             );
         }
 
-        const category = DB.getCategoryById(id);
+        const category = DB.getCategoryById(categoryId);
         return NextResponse.json(category);
     } catch (error) {
         console.error('更新分类失败:', error);
@@ -79,17 +80,21 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 }
 
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
-        const id = parseInt(params.id);
-        if (isNaN(id)) {
+        const { id } = await params;
+        const categoryId = parseInt(id);
+        if (isNaN(categoryId)) {
             return NextResponse.json(
                 { error: '无效的ID' },
                 { status: 400 }
             );
         }
 
-        const success = DB.deleteCategory(id);
+        const success = DB.deleteCategory(categoryId);
         if (!success) {
             return NextResponse.json(
                 { error: '分类不存在或无法删除' },
