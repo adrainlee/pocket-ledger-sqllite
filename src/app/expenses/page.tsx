@@ -2,17 +2,14 @@
 
 import { useState } from 'react';
 import ExpenseList from '@/components/ExpenseList';
+import { fetchApi } from '@/lib/api';
 
 export default function ExpensesPage() {
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`/api/expenses/${id}`, {
+      await fetchApi(`/api/expenses/${id}`, {
         method: 'DELETE',
       });
-
-      if (!response.ok) {
-        throw new Error('删除失败');
-      }
     } catch (error) {
       console.error('删除支出记录失败:', error);
       throw error;

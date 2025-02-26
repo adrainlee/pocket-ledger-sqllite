@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Expense, Category } from '@/lib/db/schema';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { fetchApi } from '@/lib/api';
 
 interface ExpenseWithCategory extends Expense {
   category: Category;
@@ -25,15 +26,9 @@ const ExpenseList = ({ onDelete }: ExpenseListProps) => {
       setIsLoading(true);
       setError('');
 
-      // 获取支出记录
-      const expensesResponse = await fetch('/api/expenses');
-      if (!expensesResponse.ok) throw new Error('获取支出记录失败');
-      const expensesData = await expensesResponse.json();
-
-      // 获取分类信息
-      const categoriesResponse = await fetch('/api/categories');
-      if (!categoriesResponse.ok) throw new Error('获取分类信息失败');
-      const categoriesData: Category[] = await categoriesResponse.json();
+      // 获取支出记录和分类信息
+      const expensesData = await fetchApi('/api/expenses');
+      const categoriesData: Category[] = await fetchApi('/api/categories');
 
       // 合并支出记录和分类信息
       const expensesWithCategory = expensesData.map((expense: Expense) => ({

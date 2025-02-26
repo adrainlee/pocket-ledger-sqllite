@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { fetchApi } from '@/lib/api';
 
 interface CategoryStats {
   id: number;
@@ -46,15 +47,12 @@ const ExpenseStats = ({ days = 30 }: ExpenseStatsProps) => {
       const end = endOfDay(new Date());
       const start = startOfDay(subDays(end, days - 1));
 
-      const response = await fetch(
-        `/api/expenses/stats?startDate=${format(start, 'yyyy-MM-dd')}&endDate=${format(
-          end,
-          'yyyy-MM-dd'
-        )}`
-      );
-
-      if (!response.ok) throw new Error('获取统计数据失败');
-      const data = await response.json();
+      const data = await fetchApi('/api/expenses/stats', {
+        params: {
+          startDate: format(start, 'yyyy-MM-dd'),
+          endDate: format(end, 'yyyy-MM-dd')
+        }
+      });
       setStats(data);
     } catch (error) {
       console.error('获取统计数据失败:', error);

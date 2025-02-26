@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ExpenseForm from '@/components/ExpenseForm';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { fetchApi } from '@/lib/api';
 
 export default function Home() {
   const [successMessage, setSuccessMessage] = useState('');
@@ -15,17 +16,10 @@ export default function Home() {
     note: string;
   }) => {
     try {
-      const response = await fetch('/api/expenses', {
+      await fetchApi('/api/expenses', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(data),
       });
-
-      if (!response.ok) {
-        throw new Error('提交失败');
-      }
 
       setSuccessMessage('记账成功！');
       setTimeout(() => setSuccessMessage(''), 3000);

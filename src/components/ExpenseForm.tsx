@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Category } from '@/lib/db/schema';
+import { fetchApi } from '@/lib/api';
 
 interface ExpenseFormProps {
   onSubmit: (data: {
@@ -25,16 +26,14 @@ const ExpenseForm = ({ onSubmit }: ExpenseFormProps) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories');
-      if (!response.ok) throw new Error('获取分类失败');
-      const data = await response.json();
+      const data = await fetchApi('/api/categories');
       setCategories(data);
       if (data.length > 0 && !categoryId) {
         setCategoryId(String(data[0].id));
       }
     } catch (error) {
       console.error('获取分类失败:', error);
-      setError('获取分类失败');
+      setError(error instanceof Error ? error.message : '获取分类失败');
     }
   };
 

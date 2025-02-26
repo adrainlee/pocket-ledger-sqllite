@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Category } from '@/lib/db/schema';
+import { fetchApi } from '@/lib/api';
 
 interface CategoryListProps {
   onDelete?: (id: number) => Promise<void>;
@@ -19,9 +20,7 @@ const CategoryList = ({ onDelete, onEdit }: CategoryListProps) => {
     try {
       setIsLoading(true);
       setError('');
-      const response = await fetch('/api/categories');
-      if (!response.ok) throw new Error('获取分类失败');
-      const data = await response.json();
+      const data = await fetchApi('/api/categories');
       setCategories(data);
     } catch (error) {
       console.error('获取分类失败:', error);

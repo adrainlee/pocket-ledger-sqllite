@@ -4,6 +4,7 @@ import { useState } from 'react';
 import CategoryList from '@/components/CategoryList';
 import CategoryForm from '@/components/CategoryForm';
 import { Category } from '@/lib/db/schema';
+import { fetchApi } from '@/lib/api';
 
 export default function CategoriesPage() {
   const [showForm, setShowForm] = useState(false);
@@ -11,18 +12,10 @@ export default function CategoriesPage() {
 
   const handleAdd = async (data: { name: string; icon: string; color: string }) => {
     try {
-      const response = await fetch('/api/categories', {
+      await fetchApi('/api/categories', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(data),
       });
-
-      if (!response.ok) {
-        throw new Error('创建失败');
-      }
-
       setShowForm(false);
     } catch (error) {
       console.error('创建分类失败:', error);
@@ -34,18 +27,10 @@ export default function CategoriesPage() {
     if (!editingCategory?.id) return;
 
     try {
-      const response = await fetch(`/api/categories/${editingCategory.id}`, {
+      await fetchApi(`/api/categories/${editingCategory.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(data),
       });
-
-      if (!response.ok) {
-        throw new Error('更新失败');
-      }
-
       setShowForm(false);
       setEditingCategory(undefined);
     } catch (error) {
@@ -56,13 +41,9 @@ export default function CategoriesPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`/api/categories/${id}`, {
+      await fetchApi(`/api/categories/${id}`, {
         method: 'DELETE',
       });
-
-      if (!response.ok) {
-        throw new Error('删除失败');
-      }
     } catch (error) {
       console.error('删除分类失败:', error);
       throw error;
