@@ -1,4 +1,4 @@
-import { useAuth } from './auth';
+import { useAuth } from './auth.js';
 
 interface FetchOptions extends RequestInit {
     params?: Record<string, string>;
