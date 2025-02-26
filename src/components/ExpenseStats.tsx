@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { fetchApi } from '@/lib/api';
@@ -35,11 +35,7 @@ const ExpenseStats = ({ days = 30 }: ExpenseStatsProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchStats();
-  }, [days]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
@@ -60,7 +56,11 @@ const ExpenseStats = ({ days = 30 }: ExpenseStatsProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [days]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   if (isLoading) {
     return <div className="text-center py-8">加载中...</div>;

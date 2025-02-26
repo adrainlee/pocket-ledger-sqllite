@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import ExpenseList from '@/components/ExpenseList';
 import { fetchApi } from '@/lib/api';
 

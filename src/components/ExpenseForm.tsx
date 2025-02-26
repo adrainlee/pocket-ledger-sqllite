@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Category } from '@/lib/db/schema';
 import { fetchApi } from '@/lib/api';
 
@@ -20,11 +20,7 @@ const ExpenseForm = ({ onSubmit }: ExpenseFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const data = await fetchApi('/api/categories');
       setCategories(data);
@@ -35,7 +31,11 @@ const ExpenseForm = ({ onSubmit }: ExpenseFormProps) => {
       console.error('获取分类失败:', error);
       setError(error instanceof Error ? error.message : '获取分类失败');
     }
-  };
+  }, [categoryId]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

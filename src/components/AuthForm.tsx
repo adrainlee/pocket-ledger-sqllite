@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth.js';
 
+// 定义 Auth 状态类型
+interface AuthState {
+  token: string | null;
+  isAuthenticated: boolean;
+  authenticate: (token: string) => Promise<boolean>;
+  logout: () => void;
+}
+
 const AuthForm = () => {
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const authenticate = useAuth((state: any) => state.authenticate);
+  const authenticate = useAuth((state: AuthState) => state.authenticate);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

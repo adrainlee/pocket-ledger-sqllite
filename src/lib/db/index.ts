@@ -36,7 +36,7 @@ class DB {
         const db = DB.getInstance();
         const updates = Object.entries(category)
             .filter(([key]) => key !== 'id')
-            .map(([key, value]) => `${key} = @${key}`)
+            .map(([key]) => `${key} = @${key}`)
             .join(', ');
 
         const result = db.prepare(`UPDATE categories SET ${updates} WHERE id = @id`).run({
@@ -90,7 +90,7 @@ class DB {
         const db = DB.getInstance();
         const updates = Object.entries(expense)
             .filter(([key]) => !['id', 'created_at', 'updated_at'].includes(key))
-            .map(([key, value]) => `${key} = @${key}`)
+            .map(([key]) => `${key} = @${key}`)
             .join(', ');
 
         const result = db.prepare(`

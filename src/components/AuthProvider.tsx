@@ -4,13 +4,21 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth.js';
 import AuthForm from './AuthForm';
 
+// 定义 Auth 状态类型
+interface AuthState {
+  token: string | null;
+  isAuthenticated: boolean;
+  authenticate: (token: string) => Promise<boolean>;
+  logout: () => void;
+}
+
 interface AuthProviderProps {
   children: React.ReactNode;
 }
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
-  const isAuthenticated = useAuth((state: any) => state.isAuthenticated);
-  const token = useAuth((state: any) => state.token);
+  const isAuthenticated = useAuth((state: AuthState) => state.isAuthenticated);
+  const token = useAuth((state: AuthState) => state.token);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
