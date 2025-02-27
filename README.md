@@ -43,7 +43,20 @@ npm install
 yarn install
 ```
 
-3. 运行开发服务器:
+3. 配置环境变量:
+
+```bash
+# 生成随机认证令牌
+node scripts/generate-token.js
+
+# 创建.env文件并添加生成的令牌
+# 或者手动创建.env文件并添加以下内容:
+# AUTH_TOKEN=你的认证令牌
+```
+
+> 注意: 认证令牌用于保护API路由，确保只有授权客户端能够访问数据。
+
+4. 运行开发服务器:
 
 ```bash
 npm run dev
@@ -51,7 +64,8 @@ npm run dev
 yarn dev
 ```
 
-4. 在浏览器中打开 [http://localhost:3000](http://localhost:3000) 查看应用。
+5. 在浏览器中打开 [http://localhost:3000](http://localhost:3000) 查看应用。
+   - 首次使用时，需要在登录页面输入配置的认证令牌
 
 ## 部署指南
 
@@ -67,13 +81,21 @@ yarn dev
 npm install -g vercel
 ```
 
-3. 在项目根目录下运行:
+3. 配置环境变量:
+   - 在Vercel项目设置中，添加环境变量`AUTH_TOKEN`
+   - 你可以使用以下命令生成一个随机令牌:
+     ```bash
+     node scripts/generate-token.js
+     ```
+   - 或者在Vercel控制台中手动设置
+
+4. 在项目根目录下运行:
 
 ```bash
 vercel
 ```
 
-4. 按照提示操作，将应用部署到Vercel平台。
+5. 按照提示操作，将应用部署到Vercel平台。
 
 注意: 由于应用使用SQLite本地数据库，数据会存储在Vercel的临时文件系统中。在无服务器环境中，每次函数执行可能使用不同的实例，因此数据可能无法持久保存。如需在生产环境持久化数据，请考虑使用方式2或3。
 
@@ -117,16 +139,26 @@ node_modules
 EOL
 ```
 
-3. 构建Docker镜像:
+3. 生成认证令牌:
+
+```bash
+node scripts/generate-token.js
+# 记下生成的令牌
+```
+
+4. 构建Docker镜像:
 
 ```bash
 docker build -t pocket-ledger .
 ```
 
-4. 运行Docker容器:
+5. 运行Docker容器，设置环境变量:
 
 ```bash
-docker run -p 3000:3000 -v $(pwd)/data:/app/data pocket-ledger
+docker run -p 3000:3000 \
+  -v $(pwd)/data:/app/data \
+  -e AUTH_TOKEN=你的认证令牌 \
+  pocket-ledger
 ```
 
 现在可以通过 http://localhost:3000 访问应用。数据将持久化存储在主机的data目录中。
@@ -146,16 +178,31 @@ cd pocket-ledger-sqllite
 
 ```bash
 npm install
+```
+
+4. 配置环境变量:
+
+```bash
+# 生成认证令牌
+node scripts/generate-token.js
+
+# 创建.env文件
+echo "AUTH_TOKEN=你的认证令牌" > .env
+```
+
+5. 构建应用:
+
+```bash
 npm run build
 ```
 
-4. 使用PM2持久运行应用:
+6. 使用PM2持久运行应用:
 
 ```bash
 # 安装PM2
 npm install -g pm2
 
-# 启动应用
+# 启动应用，确保环境变量可用
 pm2 start npm --name "pocket-ledger" -- start
 
 # 设置开机自启
@@ -163,7 +210,7 @@ pm2 startup
 pm2 save
 ```
 
-5. 配置Nginx作为反向代理(可选):
+7. 配置Nginx作为反向代理(可选):
 
 ```bash
 # 安装Nginx
@@ -194,7 +241,7 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-6. 配置SSL(可选):
+8. 配置SSL(可选):
 
 ```bash
 sudo apt install certbot python3-certbot-nginx
@@ -230,6 +277,24 @@ cp pocket-ledger.db.backup pocket-ledger.db
 1. 确保没有其他进程正在访问数据库
 2. 尝试重启应用程序
 3. 检查数据库文件权限是否正确
+
+### 认证问题
+
+如果遇到"未授权访问"或API请求失败:
+
+1. 确认`.env`文件中的`AUTH_TOKEN`环境变量已正确设置
+2. 检查前端登录时使用的令牌是否与`.env`文件中的一致
+3. 在部署环境中，验证环境变量是否正确配置
+4. 使用浏览器开发工具检查API请求头中是否包含了正确的Authorization头
+
+### 环境变量未加载
+
+如果环境变量未被正确加载:
+
+1. 确认`.env`文件位于项目根目录
+2. 重启开发服务器或应用程序
+3. 在Docker环境中，确保正确传递了环境变量
+4. 在Vercel中，检查环境变量是否在项目设置中正确配置
 
 ### 部署到Vercel后数据丢失
 
