@@ -99,60 +99,24 @@ vercel
 
 注意: 由于应用使用SQLite本地数据库，数据会存储在Vercel的临时文件系统中。在无服务器环境中，每次函数执行可能使用不同的实例，因此数据可能无法持久保存。如需在生产环境持久化数据，请考虑使用方式2或3。
 
-### 方式2: 使用Docker部署
+### 方式2: 使用Docker部署（优化版）
 
-1. 创建Dockerfile:
+项目已包含优化的Dockerfile和.dockerignore文件，专门设计用于减小镜像大小和提高构建效率。
 
-```bash
-# 如果项目中没有Dockerfile，创建一个:
-cat > Dockerfile << 'EOL'
-FROM node:18-alpine
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-RUN npm run build
-
-EXPOSE 3000
-
-# 创建数据目录
-RUN mkdir -p /app/data
-
-# 确保SQLite数据库文件保存在持久卷中
-ENV SQLITE_DB_PATH=/app/data/pocket-ledger.db
-
-CMD ["npm", "start"]
-EOL
-```
-
-2. 创建.dockerignore文件:
-
-```bash
-cat > .dockerignore << 'EOL'
-node_modules
-.next
-.git
-*.db
-EOL
-```
-
-3. 生成认证令牌:
+1. 生成认证令牌:
 
 ```bash
 node scripts/generate-token.js
 # 记下生成的令牌
 ```
 
-4. 构建Docker镜像:
+2. 构建Docker镜像:
 
 ```bash
 docker build -t pocket-ledger .
 ```
 
-5. 运行Docker容器，设置环境变量:
+3. 运行Docker容器，设置环境变量:
 
 ```bash
 docker run -p 3000:3000 \
@@ -162,6 +126,59 @@ docker run -p 3000:3000 \
 ```
 
 现在可以通过 http://localhost:3000 访问应用。数据将持久化存储在主机的data目录中。
+
+### Docker镜像优化细节
+
+我们的Docker镜像采用了多阶段构建和其他最佳实践，大幅减小了镜像体积并提高了构建效率：
+
+1. **三阶段构建流程**:
+   - `deps`: 仅安装生产依赖
+   - `builder`: 构建应用程序代码
+   - `runner`: 最小化运行时环境
+
+2. **依赖优化**:
+   - 使用`npm ci`确保依赖版本一致性
+   - 分离开发和生产依赖
+   - 只将必要的依赖复制到最终镜像
+
+3. **构建上下文优化**:
+   - 精确控制需要复制到镜像中的文件
+   - 忽略node_modules和构建缓存
+   - 仅包含源代码和必要的配置文件
+
+4. **安全增强**:
+   - 使用非root用户运行应用
+   - 实现Docker健康检查
+   - 设置合理的文件权限
+   - 创建数据卷以持久化存储
+
+5. **缓存优化**:
+   - 遵循Docker层缓存最佳实践
+   - 将较少变动的层放在构建前部
+   - 合理使用.dockerignore减少构建上下文
+
+要了解完整的优化细节，请查看项目根目录中的`Dockerfile`和`.dockerignore`文件。
+
+注意事项：
+- 确保package.json和package-lock.json文件存在于项目根目录
+- 第一次构建可能需要较长时间，因为需要安装所有依赖
+- 建议在生产环境中使用数据卷来持久化SQLite数据库
+
+### 验证Docker优化效果
+
+项目提供了一个便捷脚本来比较优化前后的Docker镜像大小：
+
+```bash
+# 确保脚本有执行权限
+chmod +x scripts/compare-docker-images.sh
+
+# 运行比较脚本
+./scripts/compare-docker-images.sh
+```
+
+此脚本会构建两个版本的Docker镜像（基础版和优化版），并显示它们的大小对比，让你直观地看到优化效果。在典型情况下，优化版镜像可以减少30-50%的大小。
+
+> 注意：首次运行脚本可能需要一段时间，因为需要下载依赖和构建两个镜像。
 
 ### 方式3: 在VPS上部署
 

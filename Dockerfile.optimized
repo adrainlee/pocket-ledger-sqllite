@@ -1,0 +1,57 @@
+# 依赖安装阶段
+FROM node:18-alpine AS deps
+WORKDIR /app
+
+# 仅复制依赖清单文件
+COPY package.json package-lock.json ./
+
+# 只安装生产依赖
+RUN npm ci --only=production --ignore-scripts
+
+# 构建阶段
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# 先复制依赖清单
+COPY package.json package-lock.json ./
+# 只安装开发依赖(生产依赖会从上一阶段复制)
+RUN npm ci --only=development
+
+# 从deps阶段复制生产依赖
+COPY --from=deps /app/node_modules ./node_modules
+
+# 复制源代码并构建
+COPY . .
+RUN npm run build
+
+# 生产阶段
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# 只安装SQLite所需的最小依赖
+RUN apk add --no-cache g++ python3 make
+
+# 创建non-root用户
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs \
+    && mkdir -p /app/data \
+    && chown -R nextjs:nodejs /app
+
+# 只复制生产环境需要的文件
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# 配置环境变量
+ENV SQLITE_DB_PATH=/app/data/pocket-ledger.db \
+    NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
+
+USER nextjs
+EXPOSE 3000
+
+# 使用更高效的健康检查
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+CMD ["node", "server.js"]

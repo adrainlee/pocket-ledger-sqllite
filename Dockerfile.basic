@@ -1,0 +1,24 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 复制依赖文件
+COPY package*.json ./
+# 安装所有依赖
+RUN npm install
+
+# 复制项目文件并构建
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+
+# 创建数据目录
+RUN mkdir -p /app/data
+
+# 设置环境变量
+ENV SQLITE_DB_PATH=/app/data/pocket-ledger.db
+ENV NODE_ENV=production
+
+# 设置运行命令
+CMD ["npm", "start"]
