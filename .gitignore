@@ -43,3 +43,8 @@ next-env.d.ts
 # database
 *.db
 *.db-journal
+
+# docker backups and temporary files
+Dockerfile_bak
+Dockerfile-run-build
+*-backup
